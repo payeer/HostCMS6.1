@@ -1,0 +1,1 @@
+<?php header('Location: ' . $_SERVER['HOST'] . '/shop/cart/?order_id=' . $_GET['m_orderid'] . '&payment=' . $_GET['m_status']);?>

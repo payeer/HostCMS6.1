@@ -1,37 +1,41 @@
 <?php
 class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 {
-	////////////////////////  Settings Payeer  ///////////////////////////////////
+	////////////////////////  Настройки Payeer  ///////////////////////////////////
 	
-	// url for payment through the system Payeer
+	// url для оплаты в системе Payeer
 	
     protected $m_url = '//payeer.com/merchant/';
-
-	// The store identifier registered in the system "PAYEER"
+	
+	// Идентификатор магазина, зарегистрированного в системе "PAYEER"
 	
     protected $m_shop = '';
 	
-	// The secret key notification about the payment,<br/>which is used to verify the integrity of the received information
+	// Секретный ключ оповещения о выполнении платежа,<br/>который используется для проверки целостности полученной информации
 	
-    protected $secret_key = ''; // secret key
+    protected $secret_key = '';
 	
-	// 1 - ruble (RUB), 2 - Euro (EUR), 3 - dollars (USD)
+	// Комментарий к заказу
+	
+    protected $payeer_description = '';
+	
+	// 1 - рубли (RUB), 2 - евро (EUR), 3 - доллары (USD)
 	
     protected $payeer_currency = 1;
 	
-	// trusted ip addresses. Specify a comma, you can specify the mask
+	// доверенные ip-адреса. Указать через запятую, можно указать маску
 	
 	protected $ipfilter = ''; 
 	
-	// email address to send error messages payment
+	// email для отправки сообщений об ошибках оплаты
 	
 	protected $emailerror = '';
 	
-	// 1 - log /payeer/orders.log ; 0 - do not write
+	// путь до файла-журнала (например, /payeer_orders.log). Если пусто, то запись не ведется
 	
-	protected $payeer_log = 0; 
+	protected $payeer_log = ''; 
 
-	////////////////////////  End settings Payeer  //////////////////////////////
+	////////////////////////  Конец настроек Payeer  //////////////////////////////
 	
 	public function execute()
     {
@@ -79,7 +83,7 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
         $oShop_Currency = Core_Entity::factory('Shop_Currency')->find($this->payeer_currency);
         $currency_code = $oShop_Currency->code;
         $currency_name = $oShop_Currency->name;
-        $m_desc = base64_encode('Payment # ' . $m_orderid);
+        $m_desc = base64_encode($this->payeer_description);
 		
 		$m_curr = $currency_code;
 		
@@ -92,13 +96,13 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 			$m_key
 		);
 		$sign = strtoupper(hash('sha256', implode(":", $arHash)));
-
+		
         ob_start();
 
 		?>
 
-		<h1>Payment through the system Payeer</h1>
-		<p>The amount to be paid is <strong><?php echo $m_amount?> <?php echo $currency_name?></strong></p>
+		<h1>Оплата через систему Payeer</h1>
+		<p>Сумма к оплате составляет <strong><?php echo $m_amount?> <?php echo $currency_name?></strong></p>
 		<form action="<?=$m_url?>" name="pay" method="get">
 			<input type="hidden" name="m_shop" value="<?=$m_shop?>">
 			<input type="hidden" name="m_orderid" value="<?=$m_orderid?>">
@@ -106,8 +110,13 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 			<input type="hidden" name="m_curr" value="<?=$m_curr?>">
 			<input type="hidden" name="m_desc" value="<?=$m_desc?>">
 			<input type="hidden" name="m_sign" value="<?=$sign?>">
-			<p><img src="https://payeer.com/bitrix/templates/difiz/images/logo.png" width="88" height="31" alt="The system of electronic payments Payeer" title="The system of electronic payments Payeer" style="float:left; margin-right:0.5em; margin-bottom:0.5em; padding-top:0.25em;"><b>Welcome to the website of the payment system <a href="https://payeer.com">Payeer</a></b>.</p>
-			<p><input type="submit" name="submit" value="To pay using Payeer"></p>
+			<p><img src="https://payeer.com/bitrix/templates/difiz/images/logo.png" 
+				alt="Система электронных платежей Payeer" 
+				title="Система электронных платежей Payeer" 
+				style="float:left; margin-right:0.5em; margin-bottom:0.5em; padding-top:0.25em;">
+				<b>Payeer® Merchant позволяет принимать платежи всеми возможными способами по всему миру!</b>. 
+			</p>
+			<p><input type="submit" name="submit" value="Оплатить с помощью Payeer"></p>
 		</form>
 
 		<?php
@@ -125,7 +134,7 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
     function ProcessResult()
     {
 		if (isset($_POST['m_orderid']))
-		{
+		{            
 			$m_key = $this->secret_key;
 			
 			$arHash = array($_POST['m_operation_id'],
@@ -144,6 +153,7 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 			$sign_hash = strtoupper(hash('sha256', implode(':', $arHash)));
 			
 			// проверка принадлежности ip списку доверенных ip
+			
 			$list_ip_str = str_replace(' ', '', $this->ipfilter);
 			
 			if (!empty($list_ip_str)) 
@@ -175,21 +185,21 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 		
 			$log_text = 
 				"--------------------------------------------------------\n".
-				"operation id		".$_POST["m_operation_id"]."\n".
-				"operation ps		".$_POST["m_operation_ps"]."\n".
-				"operation date		".$_POST["m_operation_date"]."\n".
-				"operation pay date	".$_POST["m_operation_pay_date"]."\n".
-				"shop				".$_POST["m_shop"]."\n".
-				"order id			".$_POST["m_orderid"]."\n".
-				"amount				".$_POST["m_amount"]."\n".
-				"currency			".$_POST["m_curr"]."\n".
-				"description		".base64_decode($_POST["m_desc"])."\n".
-				"status				".$_POST["m_status"]."\n".
-				"sign				".$_POST["m_sign"]."\n\n";
+				"operation id		" . $_POST["m_operation_id"] . "\n".
+				"operation ps		" . $_POST["m_operation_ps"] . "\n".
+				"operation date		" . $_POST["m_operation_date"] . "\n".
+				"operation pay date	" . $_POST["m_operation_pay_date"] . "\n".
+				"shop				" . $_POST["m_shop"] . "\n".
+				"order id			" . $_POST["m_orderid"] . "\n".
+				"amount				" . $_POST["m_amount"] . "\n".
+				"currency			" . $_POST["m_curr"] . "\n".
+				"description		" . base64_decode($_POST["m_desc"]) . "\n".
+				"status				" . $_POST["m_status"] . "\n".
+				"sign				" . $_POST["m_sign"] . "\n\n";
 					
-			if ($this->payeer_log == 1)
+			if ($this->payeer_log != '')
 			{
-				file_put_contents($_SERVER['DOCUMENT_ROOT'].'/payeer/orders.log', $log_text, FILE_APPEND);
+				file_put_contents($_SERVER['DOCUMENT_ROOT'] . $this->payeer_log, $log_text, FILE_APPEND);
 			}
 
 			if ($_POST['m_sign'] == $sign_hash && $_POST['m_status'] == 'success' && $valid_ip)
@@ -197,38 +207,38 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 				$this->_shopOrder->paid();
 				$this->setXSLs();
 				$this->send();
-				
-				echo $_POST['m_orderid'] . '|success';
+
+				echo ($_POST['m_orderid'] . '|success');
 			}
 			else
 			{
 				$oSite_Alias = $this->_shopOrder->Shop->Site->getCurrentAlias();
 				$site_alias = !is_null($oSite_Alias) ? $oSite_Alias->name : '';
 				$to = $this->emailerror;
-				$subject = "Error payment";
-				$message = "Failed to make the payment through the system Payeer for the following reasons:\n\n";
+				$subject = "Ошибка оплаты";
+				$message = "Не удалось провести платёж через систему Payeer по следующим причинам:\n\n";
 				
 				if ($_POST["m_sign"] != $sign_hash)
 				{
-					$message.=" - Do not match the digital signature\n";
+					$message .= " - Не совпадают цифровые подписи\n";
 				}
 				
 				if ($_POST['m_status'] != "success")
 				{
-					$message.=" - The payment status is not success\n";
+					$message .= " - Cтатус платежа не является success\n";
 				}
 				
 				if (!$valid_ip)
 				{
-					$message.=" - the ip address of the server is not trusted\n";
-					$message.="   trusted ip: " . $this->ipfilter . "\n";
-					$message.="   ip of the current server: " . $_SERVER['REMOTE_ADDR'] . "\n";
+					$message .= " - ip-адрес сервера не является доверенным\n";
+					$message .= "   доверенные ip: " . $this->ipfilter . "\n";
+					$message .= "   ip текущего сервера: " . $_SERVER['REMOTE_ADDR'] . "\n";
 				}
 				
-				$message.="\n" . $log_text;
+				$message .= "\n" . $log_text;
 				$headers = "From: no-reply@" . $site_alias . "\r\nContent-type: text/plain; charset=utf-8 \r\n";
 				mail($to, $subject, $message, $headers);
-				echo $_POST['m_orderid'] . '|error';
+				echo ($_POST['m_orderid'] . '|error');
 			}
 		}
 		else

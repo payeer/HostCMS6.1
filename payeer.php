@@ -102,14 +102,14 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 		?>
 
 		<h1>Оплата через систему Payeer</h1>
-		<p>Сумма к оплате составляет <strong><?php echo $m_amount?> <?php echo $currency_name?></strong></p>
-		<form action="<?=$m_url?>" name="pay" method="get">
-			<input type="hidden" name="m_shop" value="<?=$m_shop?>">
-			<input type="hidden" name="m_orderid" value="<?=$m_orderid?>">
-			<input type="hidden" name="m_amount" value="<?=$m_amount?>">
-			<input type="hidden" name="m_curr" value="<?=$m_curr?>">
-			<input type="hidden" name="m_desc" value="<?=$m_desc?>">
-			<input type="hidden" name="m_sign" value="<?=$sign?>">
+		<p>Сумма к оплате составляет <strong><?php echo $m_amount; ?> <?php echo $currency_name; ?></strong></p>
+		<form action="<?php echo $m_url; ?>" name="pay" method="get">
+			<input type="hidden" name="m_shop" value="<?php echo $m_shop; ?>">
+			<input type="hidden" name="m_orderid" value="<?php echo $m_orderid; ?>">
+			<input type="hidden" name="m_amount" value="<?php echo $m_amount; ?>">
+			<input type="hidden" name="m_curr" value="<?php echo $m_curr; ?>">
+			<input type="hidden" name="m_desc" value="<?php echo $m_desc; ?>">
+			<input type="hidden" name="m_sign" value="<?php echo $sign; ?>">
 			<p><img src="https://payeer.com/bitrix/templates/difiz/images/logo.png" 
 				alt="Система электронных платежей Payeer" 
 				title="Система электронных платежей Payeer" 

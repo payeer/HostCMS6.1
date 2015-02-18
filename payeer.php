@@ -79,7 +79,7 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
         $m_shop = $this->m_shop;
 		$m_key = $this->secret_key;
         $m_orderid = $this->_shopOrder->id;
-        $m_amount = $this->getSumWithCoeff();
+        $m_amount = number_format($this->getSumWithCoeff(), 2, '.', '');
         $oShop_Currency = Core_Entity::factory('Shop_Currency')->find($this->payeer_currency);
         $currency_code = $oShop_Currency->code;
         $currency_name = $oShop_Currency->name;

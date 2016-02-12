@@ -85,7 +85,7 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
         $currency_name = $oShop_Currency->name;
         $m_desc = base64_encode($this->payeer_description);
 		
-		$m_curr = $currency_code;
+		$m_curr = ($currency_code == 'RUR') ? 'RUB' : $currency_code;
 		
 		$arHash = array(
 			$m_shop,

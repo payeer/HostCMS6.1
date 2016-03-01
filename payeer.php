@@ -236,11 +236,6 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 					$subject = "Ошибка оплаты";
 					$message = "Не удалось провести платёж через систему Payeer по следующим причинам:\n\n";
 					
-					if ($_POST["m_sign"] != $sign_hash)
-					{
-						$message .= " - Не совпадают цифровые подписи\n";
-					}
-					
 					if ($_POST['m_status'] != "success")
 					{
 						$message .= " - Cтатус платежа не является success\n";

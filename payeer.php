@@ -201,8 +201,25 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 			{
 				file_put_contents($_SERVER['DOCUMENT_ROOT'] . $this->payeer_log, $log_text, FILE_APPEND);
 			}
+			
+			if ($_POST["m_sign"] != $sign_hash)
+			{
+				$to = $this->emailerror;
+				
+				if (!empty($to))
+				{
+					$subject = "Ошибка оплаты";
+					$message = "Не удалось провести платёж через систему Payeer по следующим причинам:\n\n";
+					$message .= " - Не совпадают цифровые подписи\n";
+					$message .= "\n" . $log_text;
+					$headers = "From: no-reply@" . $_SERVER['HTTP_SERVER'] . "\r\nContent-type: text/plain; charset=utf-8 \r\n";
+					mail($to, $subject, $message, $headers);
+				}
+				
+				exit($_POST['m_orderid'] . '|error');
+			}
 
-			if ($_POST['m_sign'] == $sign_hash && $_POST['m_status'] == 'success' && $valid_ip)
+			if ($_POST['m_status'] == 'success' && $valid_ip)
 			{
 				$this->_shopOrder->paid();
 				$this->setXSLs();
@@ -212,32 +229,35 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 			}
 			else
 			{
-				$oSite_Alias = $this->_shopOrder->Shop->Site->getCurrentAlias();
-				$site_alias = !is_null($oSite_Alias) ? $oSite_Alias->name : '';
 				$to = $this->emailerror;
-				$subject = "Ошибка оплаты";
-				$message = "Не удалось провести платёж через систему Payeer по следующим причинам:\n\n";
 				
-				if ($_POST["m_sign"] != $sign_hash)
+				if (!empty($to))
 				{
-					$message .= " - Не совпадают цифровые подписи\n";
+					$subject = "Ошибка оплаты";
+					$message = "Не удалось провести платёж через систему Payeer по следующим причинам:\n\n";
+					
+					if ($_POST["m_sign"] != $sign_hash)
+					{
+						$message .= " - Не совпадают цифровые подписи\n";
+					}
+					
+					if ($_POST['m_status'] != "success")
+					{
+						$message .= " - Cтатус платежа не является success\n";
+					}
+					
+					if (!$valid_ip)
+					{
+						$message .= " - ip-адрес сервера не является доверенным\n";
+						$message .= "   доверенные ip: " . $this->ipfilter . "\n";
+						$message .= "   ip текущего сервера: " . $_SERVER['REMOTE_ADDR'] . "\n";
+					}
+					
+					$message .= "\n" . $log_text;
+					$headers = "From: no-reply@" . $_SERVER['HTTP_SERVER'] . "\r\nContent-type: text/plain; charset=utf-8 \r\n";
+					mail($to, $subject, $message, $headers);
 				}
 				
-				if ($_POST['m_status'] != "success")
-				{
-					$message .= " - Cтатус платежа не является success\n";
-				}
-				
-				if (!$valid_ip)
-				{
-					$message .= " - ip-адрес сервера не является доверенным\n";
-					$message .= "   доверенные ip: " . $this->ipfilter . "\n";
-					$message .= "   ip текущего сервера: " . $_SERVER['REMOTE_ADDR'] . "\n";
-				}
-				
-				$message .= "\n" . $log_text;
-				$headers = "From: no-reply@" . $site_alias . "\r\nContent-type: text/plain; charset=utf-8 \r\n";
-				mail($to, $subject, $message, $headers);
 				echo ($_POST['m_orderid'] . '|error');
 			}
 		}

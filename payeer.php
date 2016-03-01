@@ -152,6 +152,23 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 				
 			$sign_hash = strtoupper(hash('sha256', implode(':', $arHash)));
 			
+			if ($_POST["m_sign"] != $sign_hash)
+			{
+				$to = $this->emailerror;
+				
+				if (!empty($to))
+				{
+					$subject = "Ошибка оплаты";
+					$message = "Не удалось провести платёж через систему Payeer по следующим причинам:\n\n";
+					$message .= " - Не совпадают цифровые подписи\n";
+					$message .= "\n" . $log_text;
+					$headers = "From: no-reply@" . $_SERVER['HTTP_SERVER'] . "\r\nContent-type: text/plain; charset=utf-8 \r\n";
+					mail($to, $subject, $message, $headers);
+				}
+				
+				exit($_POST['m_orderid'] . '|error');
+			}
+			
 			// проверка принадлежности ip списку доверенных ip
 			
 			$list_ip_str = str_replace(' ', '', $this->ipfilter);
@@ -202,23 +219,6 @@ class Shop_Payment_System_HandlerXX extends Shop_Payment_System_Handler
 				file_put_contents($_SERVER['DOCUMENT_ROOT'] . $this->payeer_log, $log_text, FILE_APPEND);
 			}
 			
-			if ($_POST["m_sign"] != $sign_hash)
-			{
-				$to = $this->emailerror;
-				
-				if (!empty($to))
-				{
-					$subject = "Ошибка оплаты";
-					$message = "Не удалось провести платёж через систему Payeer по следующим причинам:\n\n";
-					$message .= " - Не совпадают цифровые подписи\n";
-					$message .= "\n" . $log_text;
-					$headers = "From: no-reply@" . $_SERVER['HTTP_SERVER'] . "\r\nContent-type: text/plain; charset=utf-8 \r\n";
-					mail($to, $subject, $message, $headers);
-				}
-				
-				exit($_POST['m_orderid'] . '|error');
-			}
-
 			if ($_POST['m_status'] == 'success' && $valid_ip)
 			{
 				$this->_shopOrder->paid();

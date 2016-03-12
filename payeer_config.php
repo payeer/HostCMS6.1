@@ -1,7 +1,11 @@
 // ------------------------------------------------
 // Обработка уведомления об оплате от Payeer     //
 // ------------------------------------------------
-if (isset($_POST['m_operation_id']) && isset($_POST['m_sign']))
+
+$payeer_m_operation_id = Core_Array::getRequest('m_operation_id');
+$payeer_m_sign = Core_Array::getRequest('m_sign');
+
+if (!empty($payeer_m_operation_id) && !empty($payeer_m_sign))
 {
 	$order_id = intval(Core_Array::getRequest('m_orderid'));
 
@@ -10,12 +14,13 @@ if (isset($_POST['m_operation_id']) && isset($_POST['m_sign']))
 	if (!is_null($oShop_Order->id))
 	{
 		// Вызов обработчика платежной системы
-		Shop_Payment_System_Handler::factory($oShop_Order->Shop_Payment_System)
+		
+		$payeer_status = Shop_Payment_System_Handler::factory($oShop_Order->Shop_Payment_System)
 			->shopOrder($oShop_Order)
-			->paymentProcessing();
+			->paymentProcessing($_POST);
+			
+		exit($payeer_status);
 	}
-
-	exit();
 }
 // ------------------------------------------------
 // /конец обработчика Payeer                     //

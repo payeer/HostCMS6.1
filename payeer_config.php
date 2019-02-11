@@ -11,7 +11,7 @@ if (!empty($payeer_m_operation_id) && !empty($payeer_m_sign))
 
 	$oShop_Order = Core_Entity::factory('Shop_Order')->find($order_id);
 
-	if (!is_null($oShop_Order->id))
+	if (!is_null($oShop_Order->id) && !$oShop_Order->paid)
 	{
 		// Вызов обработчика платежной системы
 		
